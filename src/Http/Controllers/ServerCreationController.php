@@ -32,18 +32,30 @@ class ServerCreationController extends Controller
         }
         $allocation = Allocation::whereNull('server_id')->find($validated['allocation_id']);
         if (!$allocation) {
-            return response()->json(['success' => false, 'message' => 'That allocation is no longer available. Please go back and try again.']);
+            return response()->json(['success' => false, 'message' => 'That allocation is no longer available. Please go back and try again.'], 422);
         }
         $node = Node::query()
             ->withSum('servers', 'memory')
             ->withSum('servers', 'disk')
             ->withSum('servers', 'cpu')
+            ->where('public', true)
             ->find($allocation->node_id);
         if (!$node) {
             return response()->json([
                 'success' => false,
                 'message' => 'That node does not have enough physical capacity for this server. Try a smaller configuration or a different node.',
             ], 422);
+        }
+
+        $deploymentTags = array_filter(explode(',', config('user-game-server-creator.deployment_tags') ?? ''));
+        if (!empty($deploymentTags)) {
+            $nodeTags = $node->tags ?? [];
+            if (collect($nodeTags)->intersect($deploymentTags)->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'That node is not available for user server creation.',
+                ], 422);
+            }
         }
 
         $check = $this->checkNodeCapacity($node, $validated['memory'], $validated['disk'], $validated['cpu']);
