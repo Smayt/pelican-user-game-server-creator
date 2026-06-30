@@ -26,7 +26,7 @@ class GamePickerPage extends Page
     }
     public static function canAccess(): bool
     {
-        return auth()->user()->isRootAdmin() || UserResourceLimits::where('user_id', auth()->id())->exists();
+        return UserResourceLimits::where('user_id', auth()->id())->exists();
     }
     public function schema(Schema $schema): Schema
     {
@@ -58,11 +58,20 @@ class GamePickerPage extends Page
         $budgetCpu    = $limits?->getCpuLeft() !== null ? $limits->getCpuLeft() . '%' : 'Unlimited';
         $budgetMemory = $limits?->getMemoryLeft() !== null ? $limits->getMemoryLeft() . ' MiB' : 'Unlimited';
         $budgetDisk   = $limits?->getDiskLeft() !== null ? $limits->getDiskLeft() . ' MiB' : 'Unlimited';
-        $nodes = Node::query()
+        $deploymentTags = array_filter(explode(',', config('user-game-server-creator.deployment_tags') ?? ''));
+        $nodeQuery = Node::query()
             ->withSum('servers', 'memory')
             ->withSum('servers', 'disk')
             ->withSum('servers', 'cpu')
-            ->get();
+            ->where('public', true);
+        if (!empty($deploymentTags)) {
+            $nodeQuery->where(function ($q) use ($deploymentTags) {
+                foreach ($deploymentTags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
+        }
+        $nodes = $nodeQuery->get();
         // NOTE: Node declares public typed properties (servers_sum_cpu, etc.) that
         // shadow the dynamically eager-loaded withSum attributes, so we must read
         // the raw attribute array instead of the magic property accessor.

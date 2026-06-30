@@ -86,6 +86,7 @@ class EditPermissions extends Page
                             ]);
                             $count++;
                         } catch (\Throwable $e) {
+                            \Log::warning('UGSC: failed to grant visibility', ['server_id' => $server->id, 'user' => $user->email, 'error' => $e->getMessage()]);
                         }
                     }
                     Notification::make()->title("Granted visibility on {$count} servers")->success()->send();

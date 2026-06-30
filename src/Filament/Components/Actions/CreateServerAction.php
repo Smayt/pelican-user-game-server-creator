@@ -17,7 +17,7 @@ class CreateServerAction extends Action
         parent::setUp();
 
         $this->label('Create Server');
-        $this->visible(fn () => auth()->user()->isRootAdmin() || UserResourceLimits::where('user_id', auth()->user()->id)->exists());
+        $this->visible(fn () => UserResourceLimits::where('user_id', auth()->id())->exists());
         $this->url(fn () => GamePickerPage::getUrl());
     }
 }

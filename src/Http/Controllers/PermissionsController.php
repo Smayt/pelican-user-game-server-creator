@@ -51,6 +51,7 @@ class PermissionsController extends Controller
                         SubuserPermission::WebsocketConnect->value,
                     ]);
                 } catch (\Throwable $e) {
+                    \Log::warning('UGSC: failed to create subuser', ['server_id' => $serverId, 'user' => $user->email, 'error' => $e->getMessage()]);
                 }
             }
         }

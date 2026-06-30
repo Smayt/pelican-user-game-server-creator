@@ -22,7 +22,7 @@ class CreateServerPage extends Page
     }
     public static function canAccess(): bool
     {
-        return auth()->user()->isRootAdmin() || UserResourceLimits::where('user_id', auth()->id())->exists();
+        return UserResourceLimits::where('user_id', auth()->id())->exists();
     }
     public function schema(Schema $schema): Schema
     {
@@ -40,12 +40,21 @@ class CreateServerPage extends Page
         $diskLeft = $limits?->getDiskLeft();
         $showMapSize = in_array('steam:252490', $egg->tags ?? []);
         $ugscImage = UgscEggImage::forEgg($egg->id);
-        $nodes = Node::query()
+        $deploymentTags = array_filter(explode(',', config('user-game-server-creator.deployment_tags') ?? ''));
+        $nodeQuery = Node::query()
             ->withSum('servers', 'memory')
             ->withSum('servers', 'disk')
             ->withSum('servers', 'cpu')
-            ->orderBy('name')
-            ->get();
+            ->where('public', true)
+            ->orderBy('name');
+        if (!empty($deploymentTags)) {
+            $nodeQuery->where(function ($q) use ($deploymentTags) {
+                foreach ($deploymentTags as $tag) {
+                    $q->orWhereJsonContains('tags', $tag);
+                }
+            });
+        }
+        $nodes = $nodeQuery->get();
         // NOTE: Node declares public typed properties (servers_sum_cpu, etc.) that
         // shadow the dynamically eager-loaded withSum attributes, so we must read
         // the raw attribute array instead of the magic property accessor.
@@ -73,7 +82,7 @@ class CreateServerPage extends Page
             ]];
         });
         $allocations = Allocation::whereNull('server_id')
-            ->with('node')
+            ->whereIn('node_id', $nodes->pluck('id'))
             ->orderBy('node_id')
             ->orderBy('port')
             ->get(['id', 'ip', 'port', 'node_id']);

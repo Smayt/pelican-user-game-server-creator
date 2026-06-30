@@ -23,7 +23,7 @@ class ServerVariablesPage extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()->isRootAdmin() || UserResourceLimits::where('user_id', auth()->id())->exists();
+        return UserResourceLimits::where('user_id', auth()->id())->exists();
     }
 
     public function schema(Schema $schema): Schema

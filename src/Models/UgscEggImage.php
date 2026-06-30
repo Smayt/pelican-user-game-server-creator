@@ -60,7 +60,11 @@ class UgscEggImage extends Model
 
     public static function forEgg(int $eggId): ?self
     {
-        return self::where('egg_id', $eggId)->first();
+        static $cache = [];
+        if (!array_key_exists($eggId, $cache)) {
+            $cache[$eggId] = self::where('egg_id', $eggId)->first();
+        }
+        return $cache[$eggId];
     }
 
     public static function forEggOrNew(int $eggId): self

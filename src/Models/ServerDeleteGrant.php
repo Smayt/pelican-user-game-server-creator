@@ -41,12 +41,19 @@ class ServerDeleteGrant extends Model
     {
         // Grant delete on every server this user has subuser access to
         $serverIds = \App\Models\Subuser::where('user_id', $userId)->pluck('server_id');
-        $count = 0;
-        foreach ($serverIds as $serverId) {
-            self::grant($userId, $serverId);
-            $count++;
+        if ($serverIds->isEmpty()) {
+            return 0;
         }
-        return $count;
+        $now = now();
+        self::insertOrIgnore(
+            $serverIds->map(fn ($serverId) => [
+                'user_id'    => $userId,
+                'server_id'  => $serverId,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])->all()
+        );
+        return $serverIds->count();
     }
 
     public static function revokeAllFromUser(int $userId): int
