@@ -1,0 +1,15 @@
+{
+    "id": "user-game-server-creator",
+    "name": "User Game Server Creator",
+    "author": "Smayt",
+    "version": "1.0.0",
+    "description": "Simplified game server creation with visual game picker, resource sliders and automatic requirements.",
+    "category": "plugin",
+    "url": null,
+    "update_url": null,
+    "namespace": "Smayt\\UserGameServerCreator",
+    "class": "UserGameServerCreatorPlugin",
+    "panels": null,
+    "panel_version": "^1.0.0-beta35",
+    "composer_packages": null
+}
