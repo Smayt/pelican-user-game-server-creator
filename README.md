@@ -46,7 +46,7 @@ A user has **no** access to UGSC (cannot see the game picker or create servers) 
 2. Create a record for the user, setting their CPU / memory / disk / server-count budget (use `0` or leave blank for unlimited, depending on the field).
 3. The user can now access the create-server flow from the app panel.
 
-Root admins always have full access regardless of this table.
+Root admins are not exempt from this requirement — as of this version, root admins also need a `ugsc_user_resource_limits` row to access the create-server flow. (Earlier versions bypassed this check for root admins; that bypass was removed.)
 
 ## Per-egg setup
 
@@ -68,6 +68,17 @@ The guard intentionally treats disk differently from CPU/memory, since disk cann
 | Disk | — (no soft tier) | request exceeds **free** disk space |
 
 This applies on top of, not instead of, each user's own resource budget. Pelican's node `overallocate` settings are intentionally not used by this guard — the raw `cpu`/`memory`/`disk` columns on the node are the source of truth.
+
+## Restricting deployment to specific nodes
+
+By default, UGSC will deploy user-created servers to any node. To restrict deployment to a subset of nodes, set **Node tags** in the plugin's settings (accessible from the Plugins list in the admin panel).
+
+- Tags are matched using **OR** logic: a node is eligible if it has *any* of the configured tags, not all of them.
+- Only **public** nodes are ever eligible, regardless of tags.
+- Leave the tag list empty to allow deployment to any public node (no tag restriction).
+- This is enforced both client-side (node list filtering) and server-side (`ServerCreationController`), so it cannot be bypassed via a direct API call.
+
+Tags are set per-node tag value (matching whatever tagging convention you use on your `Node` records) and configured as a comma-separated list in plugin settings.
 
 ## Permissions model
 
