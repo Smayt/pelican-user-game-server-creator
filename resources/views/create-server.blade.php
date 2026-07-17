@@ -229,16 +229,16 @@
     <script>
     function serverCreator() {
         return {
-            serverName: '',
-            nodeId: {{ $nodes->first()?->id ?? 'null' }},
-            allocationId: {{ $allocations->first()?->id ?? 'null' }},
-            players: {{ $settings->min_players }},
+            serverName: @js($initialName),
+            nodeId: {{ $initialNodeId ?? ($nodes->first()?->id ?? 'null') }},
+            allocationId: {{ $initialAllocationId ?? ($allocations->first()?->id ?? 'null') }},
+            players: {{ $initialPlayers }},
             minPlayers: {{ $settings->min_players }},
             maxPlayers: {{ $settings->max_players }},
-            mapSize: 3000,
-            cpu: {{ $settings->cpu_base }},
-            memory: {{ $settings->ram_base }},
-            disk: {{ $settings->disk }},
+            mapSize: {{ $initialMapSize }},
+            cpu: {{ $initialCpu }},
+            memory: {{ $initialMemory }},
+            disk: {{ $initialDisk }},
             cpuLeft: {{ $cpuLeft ?? 'null' }},
             memLeft: {{ $memLeft ?? 'null' }},
             diskLeft: {{ $diskLeft ?? 'null' }},
@@ -261,8 +261,12 @@
             cpuMax: {{ $settings->cpu_max }},
 
             init() {
+                @if($restored)
+                this.checkLimits();
+                @else
                 this.recalculate();
                 this.checkLimits();
+                @endif
             },
 
             recalculate() {
@@ -345,6 +349,9 @@
                     memory: parseInt(this.memory),
                     disk: parseInt(this.disk),
                     allocation_id: parseInt(this.allocationId),
+                    node_id: parseInt(this.nodeId),
+                    players: parseInt(this.players),
+                    map_size: parseInt(this.mapSize),
                 });
                 window.location.href = '{{ route("filament.app.pages.create-server.variables") }}?' + params.toString();
             }

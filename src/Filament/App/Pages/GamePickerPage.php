@@ -11,6 +11,7 @@ use Smayt\UserGameServerCreator\Models\Category;
 use Smayt\UserGameServerCreator\Models\EggSettings;
 use Smayt\UserGameServerCreator\Models\UgscEggImage;
 use Smayt\UserGameServerCreator\Models\UserResourceLimits;
+use Smayt\UserGameServerCreator\Services\DeploymentPortFilter;
 class GamePickerPage extends Page
 {
     protected static ?string $slug = 'create-server';
@@ -93,7 +94,13 @@ class GamePickerPage extends Page
             $limit = $node->disk * (1 + ($node->disk_overallocate / 100));
             return max(0, $limit - $used);
         });
-        $totalFreePorts = Allocation::whereNull('server_id')->count();
+        $eligibleNodeIds = $nodes->pluck('id')->all();
+        $portRangesByNode = DeploymentPortFilter::rangesByNode($eligibleNodeIds);
+        $totalFreePorts = DeploymentPortFilter::applyPerNodeToQuery(
+            Allocation::whereNull('server_id')->whereIn('node_id', $eligibleNodeIds),
+            $eligibleNodeIds,
+            $portRangesByNode
+        )->count();
         return [
             'categories'      => $categories,
             'eggs'            => $eggs,

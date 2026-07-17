@@ -69,9 +69,11 @@ The guard intentionally treats disk differently from CPU/memory, since disk cann
 
 This applies on top of, not instead of, each user's own resource budget. Pelican's node `overallocate` settings are intentionally not used by this guard — the raw `cpu`/`memory`/`disk` columns on the node are the source of truth.
 
-## Restricting deployment to specific nodes
+## Restricting deployment to specific nodes and ports
 
-By default, UGSC will deploy user-created servers to any node. To restrict deployment to a subset of nodes, set **Node tags** in the plugin's settings (accessible from the Plugins list in the admin panel).
+By default, UGSC will deploy user-created servers to any node, using any of that node's free allocations. Two independent restrictions are available under the plugin's settings (accessible from the Plugins list in the admin panel).
+
+### Node tags
 
 - Tags are matched using **OR** logic: a node is eligible if it has *any* of the configured tags, not all of them.
 - Only **public** nodes are ever eligible, regardless of tags.
@@ -79,6 +81,13 @@ By default, UGSC will deploy user-created servers to any node. To restrict deplo
 - This is enforced both client-side (node list filtering) and server-side (`ServerCreationController`), so it cannot be bypassed via a direct API call.
 
 Tags are set per-node tag value (matching whatever tagging convention you use on your `Node` records) and configured as a comma-separated list in plugin settings.
+
+### Per-node port ranges
+
+- Configured under **Per-node port ranges** in plugin settings: add a row per node, each with its own comma-separated list of ports and/or port ranges (e.g. `25565,27015-27020`).
+- Each node's range is independent — different nodes can be restricted to different port bands.
+- Nodes with no row configured are left unrestricted; any of that node's free allocations are offered.
+- Enforced both client-side (the allocation/port list offered on the configure page and game-picker "free ports" count) and server-side (`ServerCreationController` re-checks the specific node the submitted allocation belongs to), so it cannot be bypassed via a direct API call.
 
 ## Permissions model
 

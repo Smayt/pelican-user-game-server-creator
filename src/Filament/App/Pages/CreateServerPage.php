@@ -10,6 +10,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Smayt\UserGameServerCreator\Models\EggSettings;
 use Smayt\UserGameServerCreator\Models\UgscEggImage;
 use Smayt\UserGameServerCreator\Models\UserResourceLimits;
+use Smayt\UserGameServerCreator\Services\DeploymentPortFilter;
 class CreateServerPage extends Page
 {
     protected static ?string $slug = 'create-server/configure';
@@ -81,22 +82,53 @@ class CreateServerPage extends Page
                 'used_disk'    => $usedDisk,
             ]];
         });
-        $allocations = Allocation::whereNull('server_id')
-            ->whereIn('node_id', $nodes->pluck('id'))
+        $eligibleNodeIds = $nodes->pluck('id')->all();
+        $portRangesByNode = DeploymentPortFilter::rangesByNode($eligibleNodeIds);
+        $allocations = DeploymentPortFilter::applyPerNodeToQuery(
+            Allocation::whereNull('server_id')->whereIn('node_id', $eligibleNodeIds),
+            $eligibleNodeIds,
+            $portRangesByNode
+        )
             ->orderBy('node_id')
             ->orderBy('port')
             ->get(['id', 'ip', 'port', 'node_id']);
+
+        // When returning from the variables step via its "Back" link, these
+        // are echoed back in the query string so the form doesn't reset.
+        $restored = request()->has('name');
+        $initialName         = (string) request()->query('name', '');
+        $initialCpu          = (int) request()->query('cpu', $settings->cpu_base);
+        $initialMemory       = (int) request()->query('memory', $settings->ram_base);
+        $initialDisk         = (int) request()->query('disk', $settings->disk);
+        $initialPlayers      = (int) request()->query('players', $settings->min_players);
+        $initialMapSize      = (int) request()->query('map_size', 3000);
+        $initialAllocationId = request()->query('allocation_id') !== null
+            ? (int) request()->query('allocation_id')
+            : null;
+        $initialNodeId       = request()->query('node_id') !== null
+            ? (int) request()->query('node_id')
+            : null;
+
         return [
-            'egg'           => $egg,
-            'settings'      => $settings,
-            'cpuLeft'       => $cpuLeft,
-            'memLeft'       => $memLeft,
-            'diskLeft'      => $diskLeft,
-            'showMapSize'   => $showMapSize,
-            'allocations'   => $allocations,
-            'bannerUrl'     => $ugscImage?->getBannerUrl(),
-            'nodes'         => $nodes,
-            'nodeResources' => $nodeResources,
+            'egg'                 => $egg,
+            'settings'            => $settings,
+            'cpuLeft'             => $cpuLeft,
+            'memLeft'             => $memLeft,
+            'diskLeft'            => $diskLeft,
+            'showMapSize'         => $showMapSize,
+            'allocations'         => $allocations,
+            'bannerUrl'           => $ugscImage?->getBannerUrl(),
+            'nodes'               => $nodes,
+            'nodeResources'       => $nodeResources,
+            'restored'            => $restored,
+            'initialName'         => $initialName,
+            'initialCpu'          => $initialCpu,
+            'initialMemory'       => $initialMemory,
+            'initialDisk'         => $initialDisk,
+            'initialPlayers'      => $initialPlayers,
+            'initialMapSize'      => $initialMapSize,
+            'initialAllocationId' => $initialAllocationId,
+            'initialNodeId'       => $initialNodeId,
         ];
     }
 }

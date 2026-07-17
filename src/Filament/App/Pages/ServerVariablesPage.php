@@ -41,6 +41,9 @@ class ServerVariablesPage extends Page
         $memory        = (int) request()->query('memory', 0);
         $disk          = (int) request()->query('disk', 0);
         $allocationId  = (int) request()->query('allocation_id', 0);
+        $nodeId        = (int) request()->query('node_id', 0);
+        $players       = (int) request()->query('players', 0);
+        $mapSize       = (int) request()->query('map_size', 0);
 
         $allocation = Allocation::whereNull('server_id')->find($allocationId);
         if (!$allocation) {
@@ -95,6 +98,9 @@ class ServerVariablesPage extends Page
             'memory'            => $memory,
             'disk'              => $disk,
             'allocationId'      => $allocationId,
+            'nodeId'            => $nodeId,
+            'players'           => $players,
+            'mapSize'           => $mapSize,
             'allocationLabel'   => $allocation->ip . ':' . $allocation->port,
         ];
     }

@@ -7,6 +7,7 @@ use App\Models\Node;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Smayt\UserGameServerCreator\Models\UserResourceLimits;
+use Smayt\UserGameServerCreator\Services\DeploymentPortFilter;
 class ServerCreationController extends Controller
 {
     public function store(Request $request): JsonResponse
@@ -56,6 +57,14 @@ class ServerCreationController extends Controller
                     'message' => 'That node is not available for user server creation.',
                 ], 422);
             }
+        }
+
+        $portRanges = DeploymentPortFilter::rangesForNode($node->id);
+        if (!DeploymentPortFilter::matches($portRanges, $allocation->port)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'That port is not available for user server creation.',
+            ], 422);
         }
 
         $check = $this->checkNodeCapacity($node, $validated['memory'], $validated['disk'], $validated['cpu']);

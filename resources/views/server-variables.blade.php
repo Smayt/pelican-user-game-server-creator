@@ -62,7 +62,7 @@
         </button>
 
         <button
-            @click="window.history.back()"
+            @click="goBack()"
             class="w-full mt-3 bg-gray-700 text-gray-300 font-medium py-2 rounded-lg hover:bg-gray-600 transition-colors"
         >Back</button>
 
@@ -86,6 +86,9 @@
             memory: {{ $memory }},
             disk: {{ $disk }},
             allocationId: {{ $allocationId }},
+            nodeId: {{ $nodeId }},
+            players: {{ $players }},
+            mapSize: {{ $mapSize }},
 
             init() {
                 this.checkValid();
@@ -130,6 +133,21 @@
                     this.errorMessage = 'An error occurred. Please try again.';
                     this.deploying = false;
                 });
+            },
+
+            goBack() {
+                const params = new URLSearchParams({
+                    egg: this.eggId,
+                    name: this.name,
+                    cpu: this.cpu,
+                    memory: this.memory,
+                    disk: this.disk,
+                    allocation_id: this.allocationId,
+                    node_id: this.nodeId,
+                    players: this.players,
+                    map_size: this.mapSize,
+                });
+                window.location.href = '{{ route("filament.app.pages.create-server.configure") }}?' + params.toString();
             }
         }
     }
