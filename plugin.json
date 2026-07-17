@@ -2,7 +2,7 @@
     "id": "user-game-server-creator",
     "name": "User Game Server Creator",
     "author": "Smayt",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Simplified game server creation with visual game picker, resource sliders and automatic requirements.",
     "category": "plugin",
     "url": null,
