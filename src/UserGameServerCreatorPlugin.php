@@ -41,6 +41,17 @@ class UserGameServerCreatorPlugin implements HasPluginSettings, Plugin
         );
     }
 
+    public function getSettingsFormData(): array
+    {
+        return [
+            'database_limit'   => config('user-game-server-creator.database_limit'),
+            'allocation_limit' => config('user-game-server-creator.allocation_limit'),
+            'backup_limit'     => config('user-game-server-creator.backup_limit'),
+            'deployment_tags'  => array_filter(explode(',', config('user-game-server-creator.deployment_tags'))),
+            'deployment_ports' => array_filter(explode(',', config('user-game-server-creator.deployment_ports'))),
+        ];
+    }
+
     public function getSettingsForm(): array
     {
         return [
